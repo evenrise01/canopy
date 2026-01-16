@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // PgBouncer (runtime)
+  directUrl = env("DIRECT_URL") // Direct connection (migrations)
+}
+
+model Workspace {
+  id                 String   @id @default(cuid())
+  name               String?
+  businessCategory   String?
+  currency           String?  @default("USD")
+  businessType       String?
+  teamSize           String?
+  intendedUsage      String[]
+  onboardingComplete Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  users              User[]
+}
+
+model User {
+  id          String    @id @default(cuid())
+  clerkUserId String    @unique
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+}
