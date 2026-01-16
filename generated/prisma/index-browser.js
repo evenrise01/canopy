@@ -142,6 +142,45 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ClientScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  workspaceId: 'workspaceId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  status: 'status',
+  workspaceId: 'workspaceId',
+  clientId: 'clientId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MilestoneScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  dueDate: 'dueDate',
+  status: 'status',
+  projectId: 'projectId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.InternalNoteScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  projectId: 'projectId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -156,11 +195,28 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.ProjectStatus = exports.$Enums.ProjectStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED'
+};
 
+exports.MilestoneStatus = exports.$Enums.MilestoneStatus = {
+  TODO: 'TODO',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  BLOCKED: 'BLOCKED'
+};
 
 exports.Prisma.ModelName = {
   Workspace: 'Workspace',
-  User: 'User'
+  User: 'User',
+  Client: 'Client',
+  Project: 'Project',
+  Milestone: 'Milestone',
+  InternalNote: 'InternalNote'
 };
 
 /**

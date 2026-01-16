@@ -13,17 +13,19 @@ datasource db {
 }
 
 model Workspace {
-    id                 String   @id @default(cuid())
+    id                 String    @id @default(cuid())
     name               String?
     businessCategory   String?
-    currency           String?  @default("USD")
+    currency           String?   @default("USD")
     businessType       String?
     teamSize           String?
     intendedUsage      String[]
-    onboardingComplete Boolean  @default(false)
-    createdAt          DateTime @default(now())
-    updatedAt          DateTime @updatedAt
+    onboardingComplete Boolean   @default(false)
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
     users              User[]
+    projects           Project[]
+    clients            Client[]
 }
 
 model User {
@@ -35,4 +37,75 @@ model User {
     updatedAt   DateTime  @updatedAt
 
     @@index([workspaceId])
+}
+
+model Client {
+    id          String    @id @default(cuid())
+    name        String
+    email       String
+    workspaceId String
+    workspace   Workspace @relation(fields: [workspaceId], references: [id])
+    projects    Project[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([workspaceId])
+}
+
+model Project {
+    id          String         @id @default(cuid())
+    name        String
+    description String?
+    status      ProjectStatus  @default(NOT_STARTED)
+    workspaceId String
+    workspace   Workspace      @relation(fields: [workspaceId], references: [id])
+    clientId    String?
+    client      Client?        @relation(fields: [clientId], references: [id])
+    milestones  Milestone[]
+    notes       InternalNote[]
+    createdAt   DateTime       @default(now())
+    updatedAt   DateTime       @updatedAt
+
+    @@index([workspaceId])
+    @@index([clientId])
+}
+
+model Milestone {
+    id          String          @id @default(cuid())
+    title       String
+    description String?
+    dueDate     DateTime?
+    status      MilestoneStatus @default(TODO)
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+
+    @@index([projectId])
+}
+
+model InternalNote {
+    id        String   @id @default(cuid())
+    content   String
+    projectId String
+    project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([projectId])
+}
+
+enum ProjectStatus {
+    NOT_STARTED
+    IN_PROGRESS
+    ON_HOLD
+    COMPLETED
+    ARCHIVED
+}
+
+enum MilestoneStatus {
+    TODO
+    IN_PROGRESS
+    COMPLETED
+    BLOCKED
 }

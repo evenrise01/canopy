@@ -114,6 +114,45 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ClientScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  workspaceId: 'workspaceId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  status: 'status',
+  workspaceId: 'workspaceId',
+  clientId: 'clientId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MilestoneScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  dueDate: 'dueDate',
+  status: 'status',
+  projectId: 'projectId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.InternalNoteScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  projectId: 'projectId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -128,11 +167,28 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.ProjectStatus = exports.$Enums.ProjectStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED'
+};
 
+exports.MilestoneStatus = exports.$Enums.MilestoneStatus = {
+  TODO: 'TODO',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  BLOCKED: 'BLOCKED'
+};
 
 exports.Prisma.ModelName = {
   Workspace: 'Workspace',
-  User: 'User'
+  User: 'User',
+  Client: 'Client',
+  Project: 'Project',
+  Milestone: 'Milestone',
+  InternalNote: 'InternalNote'
 };
 /**
  * Create the Client
@@ -173,7 +229,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -182,13 +237,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\") // PgBouncer (runtime)\n  directUrl = env(\"DIRECT_URL\") // Direct connection (migrations)\n}\n\nmodel Workspace {\n  id                 String   @id @default(cuid())\n  name               String?\n  businessCategory   String?\n  currency           String?  @default(\"USD\")\n  businessType       String?\n  teamSize           String?\n  intendedUsage      String[]\n  onboardingComplete Boolean  @default(false)\n  createdAt          DateTime @default(now())\n  updatedAt          DateTime @updatedAt\n  users              User[]\n}\n\nmodel User {\n  id          String    @id @default(cuid())\n  clerkUserId String    @unique\n  workspaceId String\n  workspace   Workspace @relation(fields: [workspaceId], references: [id])\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n\n  @@index([workspaceId])\n}\n",
-  "inlineSchemaHash": "17e596ddb4bb5e19811ce4ec84a3afdd35fc5f7bea289ed6e3d2c4ac51995829",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\") // PgBouncer (runtime)\n  directUrl = env(\"DIRECT_URL\") // Direct connection (migrations)\n}\n\nmodel Workspace {\n  id                 String    @id @default(cuid())\n  name               String?\n  businessCategory   String?\n  currency           String?   @default(\"USD\")\n  businessType       String?\n  teamSize           String?\n  intendedUsage      String[]\n  onboardingComplete Boolean   @default(false)\n  createdAt          DateTime  @default(now())\n  updatedAt          DateTime  @updatedAt\n  users              User[]\n  projects           Project[]\n  clients            Client[]\n}\n\nmodel User {\n  id          String    @id @default(cuid())\n  clerkUserId String    @unique\n  workspaceId String\n  workspace   Workspace @relation(fields: [workspaceId], references: [id])\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n\n  @@index([workspaceId])\n}\n\nmodel Client {\n  id          String    @id @default(cuid())\n  name        String\n  email       String\n  workspaceId String\n  workspace   Workspace @relation(fields: [workspaceId], references: [id])\n  projects    Project[]\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n\n  @@index([workspaceId])\n}\n\nmodel Project {\n  id          String         @id @default(cuid())\n  name        String\n  description String?\n  status      ProjectStatus  @default(NOT_STARTED)\n  workspaceId String\n  workspace   Workspace      @relation(fields: [workspaceId], references: [id])\n  clientId    String?\n  client      Client?        @relation(fields: [clientId], references: [id])\n  milestones  Milestone[]\n  notes       InternalNote[]\n  createdAt   DateTime       @default(now())\n  updatedAt   DateTime       @updatedAt\n\n  @@index([workspaceId])\n  @@index([clientId])\n}\n\nmodel Milestone {\n  id          String          @id @default(cuid())\n  title       String\n  description String?\n  dueDate     DateTime?\n  status      MilestoneStatus @default(TODO)\n  projectId   String\n  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)\n  createdAt   DateTime        @default(now())\n  updatedAt   DateTime        @updatedAt\n\n  @@index([projectId])\n}\n\nmodel InternalNote {\n  id        String   @id @default(cuid())\n  content   String\n  projectId String\n  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@index([projectId])\n}\n\nenum ProjectStatus {\n  NOT_STARTED\n  IN_PROGRESS\n  ON_HOLD\n  COMPLETED\n  ARCHIVED\n}\n\nenum MilestoneStatus {\n  TODO\n  IN_PROGRESS\n  COMPLETED\n  BLOCKED\n}\n",
+  "inlineSchemaHash": "0e6389d3ca5c1a9959769831effb07d3fac6ca2bc3a7b4436962208292d4a349",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Workspace\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"businessCategory\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"businessType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"teamSize\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"intendedUsage\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"onboardingComplete\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToWorkspace\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspaceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspace\",\"kind\":\"object\",\"type\":\"Workspace\",\"relationName\":\"UserToWorkspace\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Workspace\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"businessCategory\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"businessType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"teamSize\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"intendedUsage\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"onboardingComplete\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToWorkspace\"},{\"name\":\"projects\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ProjectToWorkspace\"},{\"name\":\"clients\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToWorkspace\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspaceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspace\",\"kind\":\"object\",\"type\":\"Workspace\",\"relationName\":\"UserToWorkspace\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Client\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspaceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspace\",\"kind\":\"object\",\"type\":\"Workspace\",\"relationName\":\"ClientToWorkspace\"},{\"name\":\"projects\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ClientToProject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Project\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"ProjectStatus\"},{\"name\":\"workspaceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workspace\",\"kind\":\"object\",\"type\":\"Workspace\",\"relationName\":\"ProjectToWorkspace\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"client\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToProject\"},{\"name\":\"milestones\",\"kind\":\"object\",\"type\":\"Milestone\",\"relationName\":\"MilestoneToProject\"},{\"name\":\"notes\",\"kind\":\"object\",\"type\":\"InternalNote\",\"relationName\":\"InternalNoteToProject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Milestone\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dueDate\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"MilestoneStatus\"},{\"name\":\"projectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"project\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"MilestoneToProject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"InternalNote\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"projectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"project\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"InternalNoteToProject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
